@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>As-Sa'adah | Progress Hafalan TKQ/TPQ</title>
+    
+    <!-- Google Fonts: Poppins & Amiri for Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- QR Code Generator & JSZip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Poppins', 'sans-serif'],
+                        arabic: ['Amiri', 'serif']
+                    },
+                    colors: {
+                        primary: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 900: '#14532d' }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.2s ease-out forwards',
+                        'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'blob': 'blob 7s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(15px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { -webkit-tap-highlight-color: transparent; background-color: #f8fafc; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        .loader { border-top-color: #16a34a; animation: spinner 1s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        html { scroll-behavior: smooth; }
+        
+        .progress-stripe {
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.2) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem; animation: moveStripe 1s linear infinite;
+        }
+        @keyframes moveStripe { from { background-position: 1rem 0; } to { background-position: 0 0; } }
+
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .accordion-content { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 2000px; opacity: 1; }
+
+        @media print {
+            body.is-printing-single * { visibility: hidden !important; }
+            body.is-printing-single #modal-container { background: white !important; align-items: start !important; justify-content: start !important; padding: 0 !important; visibility: visible !important; }
+            body.is-printing-single #print-area, body.is-printing-single #print-area * { visibility: visible !important; }
+            body.is-printing-single #print-area { position: absolute; left: 0; top: 0; border: 1px solid #e2e8f0; border-radius: 16px; width: 6.5cm; padding: 20px; margin: 0; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col relative selection:bg-emerald-200 selection:text-emerald-900">
+
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-[-1]">
+        <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-emerald-300/30 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-teal-300/30 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-green-300/30 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Container Utama -->
+    <div id="app" class="flex-grow flex flex-col w-full h-full relative z-10"></div>
+    
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-xs md:max-w-sm pointer-events-none px-4 md:px-0"></div>
+    <div id="modal-container" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-200 overflow-y-auto"></div>
+    
+    <div id="global-loader" class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/80 backdrop-blur-md">
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-emerald-100 border-t-emerald-600 rounded-full loader"></div>
+            <i data-lucide="book-open" class="w-6 h-6 text-emerald-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse-slow"></i>
+        </div>
+        <p class="text-emerald-700 font-bold mt-4 tracking-wider text-sm animate-pulse-slow">Memuat Sistem...</p>
+    </div>
+
+    <script>
+        /* STREAMING_CHUNK: Configuration */
+        const API_URL = "https://script.google.com/macros/s/AKfycbxMDCrSrdk5Bf4p1pDvoduCvTMZNNZxJU83XTFNHGdI_3ejPp7p14duqHT_-DMdR2A9/exec"; 
+        
+        const TPQ_LOGO = "https://cdn.phototourl.com/member/2026-09-08-92a66d20-b9c8-48ce-a051-79bf5c379dc3.png";
+        const AVATAR_L = "https://cdn.phototourl.com/free/2026-09-10-3b329aa0-bcd0-4e7c-b2fb-436446f1df2f.png";
+        const AVATAR_P = "https://cdn.phototourl.com/free/2026-09-10-83a53473-e09c-413e-a624-98ed3b0a0be2.png";
+
+        const state = {
+            currentUser: null, 
+            globalPdfUrl: "",
+            students: [],
+            materials: [],
+            classes: [],
+            teachers: []
+        };
+
+        const appDiv = document.getElementById('app');
+
+        /* STREAMING_CHUNK: API Helpers */
+        async function fetchApi(action, params = {}, method = 'GET', body = null) {
+            if (!API_URL || API_URL === "TEMPEL_URL_WEB_APP_GOOGLE_APPS_SCRIPT_DI_SINI") {
+                showToast("URL API Belum Dikonfigurasi!", "error");
+                return { success: false, message: "URL API Belum Dikonfigurasi!" };
+            }
+
+            let url = `${API_URL}?action=${action}`;
+            if (method === 'GET' && Object.keys(params).length > 0) {
+                url += '&' + new URLSearchParams(params).toString();
+            }
+
+            try {
+                const options = { method };
+                if (method === 'POST') {
+                    options.body = JSON.stringify(body);
+                    options.headers = { 'Content-Type': 'text/plain;charset=utf-8' };
+                }
+                const res = await fetch(url, options);
+                if (!res.ok) throw new Error('Koneksi Gagal');
+                return await res.json();
+            } catch (e) {
+                console.error("API Error:", e);
+                return { success: false, message: "Koneksi ke server bermasalah." };
+            }
+        }
+        
+        const apiGet = (action, params) => fetchApi(action, params, 'GET');
+        const apiPost = (action, body) => fetchApi(action, {}, 'POST', body);
+
+        /* STREAMING_CHUNK: UI Utilities */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-600/95' : (type === 'error' ? 'bg-rose-600/95' : 'bg-slate-800/95');
+            const icon = type === 'success' ? 'check-circle' : (type === 'error' ? 'x-circle' : 'info');
+            toast.className = `${bgColor} backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 transform transition-all duration-300 translate-y-4 opacity-0 pointer-events-auto mt-2 border border-white/10 z-[100]`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i><p class="text-sm font-medium tracking-wide leading-tight">${message}</p>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]', 'scale-95');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showLoading(show = true) {
+            const loader = document.getElementById('global-loader');
+            if (show) loader.classList.replace('hidden', 'flex');
+            else {
+                loader.classList.add('opacity-0');
+                setTimeout(() => { loader.classList.replace('flex', 'hidden'); loader.classList.remove('opacity-0'); }, 200);
+            }
+        }
+
+        function openModal(htmlContent) {
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = htmlContent;
+            modal.classList.replace('hidden', 'flex');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-container');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.replace('flex', 'hidden');
+                modal.innerHTML = '';
+            }, 200);
+        }
+
+        /* STREAMING_CHUNK: Public Student Progress View */
+        async function renderStudentProgress(token) {
+            showLoading(true);
+            const response = await apiGet('getStudentProgress', { token });
+            showLoading(false);
+
+            if (!response.success) {
+                appDiv.innerHTML = `
+                    <div class="flex-grow flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                        <div class="w-24 h-24 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
+                            <i data-lucide="shield-alert" class="w-12 h-12"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Data Tidak Ditemukan</h2>
+                        <button onclick="goToHome()" class="mt-8 px-6 py-2 bg-emerald-600 text-white rounded-full text-sm font-semibold hover:bg-emerald-700 transition-colors">Kembali ke Beranda</button>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            const data = response.data;
+            state.globalPdfUrl = data.globalPdfUrl || "";
+            state.materials = data.materials; 
+
+            const grouped = data.materials.reduce((acc, curr) => {
+                if(!acc[curr.category]) acc[curr.category] = [];
+                acc[curr.category].push(curr);
+                return acc;
+            }, {});
+
+            let matHTML = '';
+            let index = 0;
+            for (const [category, items] of Object.entries(grouped)) {
+                const catId = `cat-${index}`;
+                const hafalCount = items.filter(i => i.status === 'HAFAL').length;
+                const totalCount = items.length;
+                const isAllHafal = hafalCount === totalCount && totalCount > 0;
+                
+                matHTML += `
+                <div class="mb-3 animate-slide-up category-group" style="animation-delay: ${index * 50}ms; opacity: 0; animation-fill-mode: forwards;">
+                    <div class="bg-white rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border ${isAllHafal ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-100'} overflow-hidden">
+                        
+                        <button onclick="toggleAccordion('${catId}')" class="w-full flex items-center justify-between p-4 focus:outline-none hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full ${isAllHafal ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'} flex items-center justify-center">
+                                    <i data-lucide="${isAllHafal ? 'check-circle' : 'book-open'}" class="w-4 h-4"></i>
+                                </div>
+                                <div class="text-left">
+                                    <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider leading-none">${category}</h3>
+                                    <p class="text-[10px] font-bold mt-1 ${isAllHafal ? 'text-emerald-600' : 'text-slate-400'}">${hafalCount} dari ${totalCount} Selesai</p>
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-down" id="icon-${catId}" class="w-5 h-5 text-slate-400 transform transition-transform duration-200"></i>
+                        </button>
+                        
+                        <div id="${catId}" class="accordion-content border-t border-slate-50 divide-y divide-slate-50">
+                `;
+                
+                items.forEach(m => {
+                    let badgeClass = m.status === 'HAFAL' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                     m.status === 'PROSES' ? 'bg-amber-50 text-amber-600 border-amber-100' : 
+                                     'bg-slate-50 text-slate-400 border-slate-100';
+                    let dotColor = m.status === 'HAFAL' ? 'bg-emerald-500' : m.status === 'PROSES' ? 'bg-amber-500' : 'bg-slate-300';
+                    
+                    matHTML += `
+                        <div class="material-item public-material-item flex justify-between items-center p-3 pl-5 hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="openLearningModal('${m.id}')" data-status="${m.status}">
+                            <div class="flex items-center gap-3 flex-grow pr-3">
+                                <div class="w-1.5 h-1.5 rounded-full ${dotColor} shrink-0 shadow-sm"></div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-700 leading-tight">${m.name}</p>
+                                    <p class="text-[9px] text-slate-400 mt-0.5">Ketuk untuk detail</p>
+                                </div>
+                            </div>
+                            <span class="shrink-0 px-2.5 py-1 text-[9px] font-bold rounded-lg border ${badgeClass}">${m.status}</span>
+                        </div>
+                    `;
+                });
+                matHTML += `</div></div></div>`;
+                index++;
+            }
+
+            let avatarSrc = data.student.gender === 'P' ? AVATAR_P : AVATAR_L;
+            if(data.student.photo && data.student.photo.trim() !== '') avatarSrc = data.student.photo;
+
+            appDiv.innerHTML = `
+                <div class="bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-700 text-white pt-6 pb-32 px-6 relative overflow-hidden shrink-0 shadow-xl">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-4 -translate-y-4">
+                        <i data-lucide="award" class="w-48 h-48"></i>
+                    </div>
+                    
+                    <div class="absolute top-5 right-5 flex gap-2 z-20">
+                        <button onclick="openPdf()" class="p-2 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-md transition-colors text-white border border-white/30 shadow-sm" title="Baca Materi Lengkap (PDF)">
+                            <i data-lucide="book-open" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="goToHome()" class="p-2 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-md transition-colors text-white border border-white/30 shadow-sm" title="Beranda">
+                            <i data-lucide="home" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="relative z-10 text-center animate-slide-down flex flex-col items-center">
+                        <img src="${TPQ_LOGO}" alt="Logo TPQ" class="w-14 h-14 object-contain mb-2 drop-shadow-md">
+                        <h1 class="text-xl font-bold tracking-wider mb-1 drop-shadow-sm">AS-SA'ADAH</h1>
+                        <p class="text-emerald-100 text-[10px] uppercase font-bold tracking-widest drop-shadow-sm">Buku Prestasi Digital</p>
+                    </div>
+                </div>
+
+                <div class="px-4 -mt-20 relative z-20 pb-12 max-w-md mx-auto w-full">
+                    <div class="glass rounded-[2rem] p-6 shadow-2xl shadow-emerald-900/10 mb-6 text-center relative animate-slide-up" style="animation-delay: 100ms; opacity: 0; animation-fill-mode: forwards;">
+                        <img src="${avatarSrc}" alt="Avatar Siswa" class="w-20 h-20 mx-auto object-cover rounded-full -mt-14 mb-3 border-4 border-white shadow-lg bg-white">
+                        <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight leading-none">${data.student.name}</h2>
+                        <div class="inline-block mt-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-semibold border border-emerald-100">
+                            ${data.student.class}
+                        </div>
+                        
+                        <div class="mt-6">
+                            <div class="flex justify-between text-xs font-bold text-slate-500 mb-2">
+                                <span>Total Pencapaian</span>
+                                <span class="text-emerald-600 text-sm">${data.stats.percentage}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-3 mb-4 overflow-hidden shadow-inner p-0.5">
+                                <div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full progress-stripe transition-all duration-1000 ease-out" style="width: ${data.stats.percentage}%" id="pb-bar"></div>
+                            </div>
+                            
+                            <!-- Filter Tabs -->
+                            <div class="flex gap-2 overflow-x-auto hide-scroll justify-center pb-1 mt-4">
+                                <button onclick="filterPublicProgress('SEMUA')" class="pub-filter-btn active bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all shadow-sm" data-status="SEMUA">Semua</button>
+                                <button onclick="filterPublicProgress('HAFAL')" class="pub-filter-btn bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="HAFAL">Hafal (${data.stats.hafal})</button>
+                                <button onclick="filterPublicProgress('PROSES')" class="pub-filter-btn bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="PROSES">Proses (${data.stats.proses})</button>
+                                <button onclick="filterPublicProgress('BELUM')" class="pub-filter-btn bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="BELUM">Belum (${data.stats.belum})</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="materials-container">${matHTML}</div>
+                </div>
+            `;
+            lucide.createIcons();
+
+            window.filterPublicProgress = function(status) {
+                const items = document.querySelectorAll('.public-material-item');
+                const buttons = document.querySelectorAll('.pub-filter-btn');
+                
+                buttons.forEach(btn => {
+                    if(btn.dataset.status === status) btn.className = `pub-filter-btn active bg-slate-800 text-white shadow-sm px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all`;
+                    else btn.className = `pub-filter-btn bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all`;
+                });
+
+                items.forEach(item => {
+                    item.style.display = (status === 'SEMUA' || item.dataset.status === status) ? 'flex' : 'none';
+                });
+
+                document.querySelectorAll('.category-group').forEach(group => {
+                    const visibleItems = Array.from(group.querySelectorAll('.public-material-item')).filter(i => i.style.display !== 'none');
+                    group.style.display = visibleItems.length === 0 ? 'none' : 'block';
+                    const content = group.querySelector('.accordion-content');
+                    const icon = group.querySelector('i[data-lucide="chevron-down"]');
+                    if (status !== 'SEMUA' && visibleItems.length > 0) {
+                        content.classList.add('open');
+                        if(icon) icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            }
+        }
+
+        window.openPdf = function() {
+            if (!state.globalPdfUrl || state.globalPdfUrl.trim() === '') {
+                showToast('Materi PDF belum tersedia.', 'error');
+                return;
+            }
+            window.open(state.globalPdfUrl, '_blank');
+        }
+
+        window.toggleAccordion = function(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            if(!content) return;
+            if(content.classList.contains('open')) {
+                content.classList.remove('open');
+                if(icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('open');
+                if(icon) icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        window.openLearningModal = function(materialId) {
+            const material = state.materials.find(m => m.id === materialId);
+            if(!material) return;
+
+            let formattedArabic = '';
+            if (material.arabic) {
+                const verses = material.arabic.split('-').map(v => v.trim()).filter(v => v.length > 0);
+                if (verses.length > 1) {
+                    const arabicNumbers = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+                    formattedArabic = verses.map((verse, index) => {
+                        const numStr = (index + 1).toString();
+                        const mappedNum = numStr.split('').map(d => arabicNumbers[parseInt(d)]).join('');
+                        const verseCircle = `<span class="inline-flex items-center justify-center min-w-[30px] h-[30px] rounded-full border-2 border-emerald-400 text-emerald-600 text-[14px] font-bold mx-1.5 bg-emerald-50 shadow-sm leading-none select-none relative top-1 font-sans" dir="ltr">${mappedNum}</span>`;
+                        return `${verse} ${verseCircle}`;
+                    }).join(' ');
+                } else {
+                    formattedArabic = material.arabic;
+                }
+            }
+
+            const modalHtml = `
+                <div class="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-md mt-auto md:mt-0 p-6 shadow-2xl relative animate-slide-up flex flex-col max-h-[85vh]">
+                    <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-slate-200 rounded-full md:hidden"></div>
+                    
+                    <div class="flex justify-between items-start mt-4 md:mt-0 mb-6 shrink-0">
+                        <div>
+                            <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">${material.category}</span>
+                            <h3 class="text-xl font-extrabold text-slate-800 leading-tight mt-1">${material.name}</h3>
+                        </div>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <div class="overflow-y-auto hide-scroll pb-6 space-y-6">
+                        ${material.image ? `<img src="${material.image}" alt="Ilustrasi" class="w-full rounded-2xl shadow-sm border border-slate-100 object-cover">` : ''}
+
+                        ${material.desc ? `
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <p class="text-xs text-slate-600 leading-relaxed font-medium"><i data-lucide="lightbulb" class="w-4 h-4 inline-block text-amber-500 mr-1 mb-1"></i> ${material.desc}</p>
+                            </div>
+                        ` : ''}
+
+                        ${material.arabic ? `
+                            <div class="text-right bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100/50">
+                                <p class="text-2xl font-bold text-slate-800 leading-[2.5] font-arabic" dir="rtl">${formattedArabic}</p>
+                            </div>
+                        ` : ''}
+
+                        ${material.latin ? `
+                            <div>
+                                <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Cara Membaca (Latin)</h4>
+                                <p class="text-sm font-semibold text-slate-700 leading-relaxed italic">${material.latin}</p>
+                            </div>
+                        ` : ''}
+
+                        ${material.arti ? `
+                            <div>
+                                <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Terjemahan</h4>
+                                <p class="text-sm text-slate-600 leading-relaxed">${material.arti}</p>
+                            </div>
+                        ` : ''}
+
+                        ${!material.arabic && !material.latin && !material.arti && !material.desc && !material.image ? `
+                            <div class="text-center py-10 opacity-50">
+                                <i data-lucide="book" class="w-10 h-10 mx-auto mb-2 text-slate-400"></i>
+                                <p class="text-sm font-medium">Materi detail belum diisi admin.</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        /* STREAMING_CHUNK: Login View */
+        function renderLogin() {
+            showLoading(false);
+            appDiv.innerHTML = `
+                <div class="min-h-[100dvh] flex flex-col items-center justify-center p-5 relative overflow-hidden z-10 bg-slate-50">
+                    <div class="glass rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-900/5 w-full max-w-md relative z-20 animate-slide-up">
+                        <div class="text-center mb-8">
+                            <img src="${TPQ_LOGO}" alt="Logo TPQ" class="w-20 h-20 mx-auto mb-4 object-contain drop-shadow-md">
+                            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">As-Sa'adah</h1>
+                            <p class="text-slate-500 text-sm mt-1 font-medium">Portal Ustadz & Admin</p>
+                        </div>
+                        
+                        <form id="loginForm" class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Username</label>
+                                <div class="relative group">
+                                    <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                    <input type="text" id="username" required class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none bg-white/50 text-sm transition-all font-medium">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Password</label>
+                                <div class="relative group">
+                                    <i data-lucide="lock" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+                                    <input type="password" id="password" required class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none bg-white/50 text-sm transition-all font-medium">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg mt-4 text-sm transition-all duration-300 flex items-center justify-center gap-2 group">
+                                <span>Masuk Sistem</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                const oriHtml = btn.innerHTML;
+                btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+                btn.disabled = true;
+
+                const res = await apiPost('login', { username: document.getElementById('username').value.trim().toLowerCase(), password: document.getElementById('password').value.trim() });
+                
+                if (res.success) {
+                    state.currentUser = res.data;
+                    if(state.currentUser.role === 'ADMIN') renderAdminLayout('dashboard');
+                    else renderAdminLayout('setor'); 
+                } else {
+                    showToast(res.message, 'error');
+                    btn.innerHTML = oriHtml;
+                    btn.disabled = false;
+                    lucide.createIcons();
+                }
+            });
+        }
+
+        /* STREAMING_CHUNK: Admin Dashboard Layout */
+        function renderAdminLayout(activeMenu) {
+            const role = state.currentUser.role;
+            let menus = [];
+            
+            if (role === 'ADMIN') {
+                menus = [
+                    { id: 'dashboard', label: 'Beranda', icon: 'layout-dashboard' },
+                    { id: 'students', label: 'Data Siswa', icon: 'users' },
+                    { id: 'setor', label: 'Setor Hafalan', icon: 'mic' },
+                    { id: 'master', label: 'Master Data', icon: 'database' } 
+                ];
+            } else if (role === 'USTADZ') {
+                menus = [
+                    { id: 'setor', label: 'Setor Hafalan', icon: 'mic' },
+                    { id: 'history', label: 'Riwayat', icon: 'history' }
+                ];
+            }
+
+            const sidebarLinks = menus.map(m => `
+                <a href="#" onclick="renderAdminLayout('${m.id}')" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 ${activeMenu === m.id ? 'bg-emerald-50 text-emerald-700 font-bold shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'}">
+                    <i data-lucide="${m.icon}" class="w-5 h-5 ${activeMenu === m.id ? 'text-emerald-600' : ''}"></i>
+                    <span class="text-sm">${m.label}</span>
+                </a>
+            `).join('');
+
+            const bottomNavLinks = menus.map(m => `
+                <a href="#" onclick="renderAdminLayout('${m.id}')" class="relative flex flex-col items-center justify-center w-full py-2 transition-colors ${activeMenu === m.id ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}">
+                    ${activeMenu === m.id ? '<div class="absolute -top-3 w-10 h-1 bg-emerald-500 rounded-b-full"></div>' : ''}
+                    <div class="${activeMenu === m.id ? 'bg-emerald-50 text-emerald-600' : ''} p-1.5 rounded-full mb-1 transition-colors">
+                        <i data-lucide="${m.icon}" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-[9px] font-bold tracking-wide">${m.label}</span>
+                </a>
+            `).join('');
+
+            appDiv.innerHTML = `
+                <div class="flex h-[100dvh] bg-slate-50 overflow-hidden w-full animate-fade-in relative z-10">
+                    <aside class="hidden md:flex flex-col w-72 bg-white border-r border-slate-100 z-20 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+                        <div class="p-6 flex items-center gap-4 mb-2">
+                            <img src="${TPQ_LOGO}" alt="Logo" class="w-12 h-12 object-contain">
+                            <div>
+                                <h2 class="font-extrabold text-slate-800 text-xl tracking-tight">As-Sa'adah</h2>
+                                <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">${state.currentUser.role}</p>
+                            </div>
+                        </div>
+                        <div class="flex-grow px-4 flex flex-col gap-1">${sidebarLinks}</div>
+                        <div class="p-6 mt-auto">
+                            <div class="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100 flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">${state.currentUser.name.charAt(0)}</div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800 leading-none">${state.currentUser.name}</p>
+                                    ${role === 'USTADZ' ? `<p class="text-[10px] text-slate-500 mt-1 truncate max-w-[120px]">${state.currentUser.classes.join(', ')}</p>` : ''}
+                                </div>
+                            </div>
+                            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-rose-500 bg-rose-50 hover:bg-rose-500 hover:text-white rounded-2xl transition-all duration-300 font-bold text-sm group">
+                                <i data-lucide="log-out" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i> Keluar
+                            </button>
+                        </div>
+                    </aside>
+
+                    <main class="flex-grow flex flex-col h-full relative overflow-hidden w-full bg-slate-50">
+                        <header class="md:hidden bg-white/80 backdrop-blur-md px-5 py-3 flex items-center justify-between z-20 shrink-0 border-b border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <img src="${TPQ_LOGO}" alt="Logo" class="w-9 h-9 object-contain">
+                                <div>
+                                    <h2 class="font-bold text-slate-800 text-sm tracking-tight">As-Sa'adah</h2>
+                                    <p class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">${state.currentUser.name.split(' ')[0]}</p>
+                                </div>
+                            </div>
+                            <button onclick="logout()" class="w-9 h-9 flex items-center justify-center text-slate-400 bg-slate-50 rounded-full hover:text-rose-500 hover:bg-rose-50 transition-colors"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+                        </header>
+
+                        <div id="admin-content" class="flex-grow overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 relative"></div>
+
+                        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 flex justify-around items-center pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-30 px-2 pt-2">
+                            ${bottomNavLinks}
+                        </nav>
+                    </main>
+                </div>
+            `;
+            lucide.createIcons();
+            
+            // Instan loading (No false delay)
+            if (activeMenu === 'dashboard' && role === 'ADMIN') loadDashboard();
+            else if (activeMenu === 'students' && role === 'ADMIN') loadStudentsAdmin();
+            else if (activeMenu === 'master' && role === 'ADMIN') loadMasterData('materi');
+            else if (activeMenu === 'setor') loadSetorHafalan(); 
+            else if (activeMenu === 'history') loadHistory(); 
+        }
+
+        /* STREAMING_CHUNK: Admin Sub-Pages (Dashboard) */
+        async function loadDashboard() {
+            const content = document.getElementById('admin-content');
+            content.innerHTML = `<div class="h-full flex items-center justify-center"><div class="loader w-10 h-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full"></div></div>`;
+            const res = await apiGet('getDashboard');
+            if(!res.success) return;
+            
+            content.innerHTML = `
+                <div class="animate-slide-up max-w-5xl mx-auto w-full">
+                    <div class="mb-8">
+                        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">Assalamu'alaikum,</h1>
+                        <p class="text-slate-500 text-sm mt-1">Ringkasan statistik sistem saat ini.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 rounded-3xl shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden">
+                            <i data-lucide="users" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10"></i>
+                            <div class="text-3xl font-black tracking-tight relative z-10">${res.data.totalStudents}</div>
+                            <div class="text-xs text-emerald-100 font-bold uppercase tracking-wider mt-1 relative z-10">Total Siswa</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-5 rounded-3xl shadow-lg shadow-blue-500/20 text-white relative overflow-hidden">
+                            <i data-lucide="book" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10"></i>
+                            <div class="text-3xl font-black tracking-tight relative z-10">${res.data.totalMaterials}</div>
+                            <div class="text-xs text-blue-100 font-bold uppercase tracking-wider mt-1 relative z-10">Total Materi</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-5 rounded-3xl shadow-lg shadow-amber-500/20 text-white relative overflow-hidden">
+                            <i data-lucide="layout" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10"></i>
+                            <div class="text-3xl font-black tracking-tight relative z-10">${res.data.totalClasses}</div>
+                            <div class="text-xs text-amber-100 font-bold uppercase tracking-wider mt-1 relative z-10">Total Kelas</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-500 to-pink-600 p-5 rounded-3xl shadow-lg shadow-purple-500/20 text-white relative overflow-hidden">
+                            <i data-lucide="shield-check" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10"></i>
+                            <div class="text-3xl font-black tracking-tight relative z-10">${res.data.totalTeachers}</div>
+                            <div class="text-xs text-purple-100 font-bold uppercase tracking-wider mt-1 relative z-10">Pengurus</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        /* STREAMING_CHUNK: Admin - Students & Bulk QR Logic */
+        async function loadStudentsAdmin() {
+            const content = document.getElementById('admin-content');
+            content.innerHTML = `<div class="h-full flex items-center justify-center"><div class="loader w-10 h-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full"></div></div>`;
+            
+            const res = await apiGet('getStudents');
+            state.students = res.data || [];
+
+            content.innerHTML = `
+                <div class="animate-slide-up h-full flex flex-col max-w-5xl mx-auto w-full">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Data Siswa</h1>
+                            <p class="text-slate-500 text-sm mt-1">Kelola data, kelas, & cetak QR.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="btnBulkQR" onclick="downloadBulkQR()" class="hidden bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold items-center gap-2 shadow-sm hover:bg-slate-700 transition-colors"><i data-lucide="download" class="w-4 h-4"></i> <span class="hidden md:inline">Download QR (ZIP)</span></button>
+                            <button onclick="openStudentModal()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm hover:bg-emerald-700 transition-colors"><i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden md:inline">Tambah Siswa</span></button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-3xl shadow-[0_4px_24px_rgb(0,0,0,0.02)] border border-slate-100 flex-grow overflow-hidden flex flex-col w-full">
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="bg-slate-50/50 text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-4 w-10"><input type="checkbox" id="selectAllQR" onclick="toggleSelectAllQR(this)" class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"></th>
+                                        <th class="px-6 py-4">Nama Lengkap</th>
+                                        <th class="px-6 py-4">Kelas & L/P</th>
+                                        <th class="px-6 py-4 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50 text-slate-700">
+                                    ${state.students.map((s, idx) => {
+                                        let displayAvatar = s.photo ? s.photo : (s.gender === 'P' ? AVATAR_P : AVATAR_L);
+                                        return `
+                                        <tr class="hover:bg-slate-50/80 transition-colors animate-slide-up" style="animation-delay: ${Math.min(idx * 20, 200)}ms; opacity: 0; animation-fill-mode: forwards;">
+                                            <td class="px-6 py-4">
+                                                <input type="checkbox" class="student-qr-cb w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" value="${s.token}" onchange="updateBulkQRButton()">
+                                            </td>
+                                            <td class="px-6 py-4 font-bold text-slate-800 flex items-center gap-3">
+                                                <img src="${displayAvatar}" class="w-9 h-9 rounded-full object-cover bg-slate-100 border border-slate-200">
+                                                ${s.name}
+                                            </td>
+                                            <td class="px-6 py-4 text-xs font-medium text-slate-600">
+                                                <div class="flex items-center gap-2">
+                                                    <span>${s.class}</span>
+                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${s.gender === 'L' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'}">${s.gender}</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <div class="flex justify-end gap-1.5">
+                                                    <!-- Open in New Tab with specific trick for SPA -->
+                                                    <button onclick="window.open(window.location.origin + window.location.pathname + '?student=${s.token}', '_blank')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Preview Public Page"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                                    <button onclick="openQrModal('${s.name}', '${s.token}', '${s.photo}')" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors" title="Cetak/Lihat QR Tunggal"><i data-lucide="qr-code" class="w-4 h-4"></i></button>
+                                                    <button onclick="openStudentModal('${s.id}')" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors" title="Edit Siswa"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                                    <button onclick="deleteStudent('${s.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors" title="Hapus Siswa"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `}).join('')}
+                                    ${state.students.length === 0 ? `<tr><td colspan="4" class="text-center py-8 text-slate-500 text-sm">Tidak ada data siswa.</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        window.toggleSelectAllQR = function(source) {
+            const checkboxes = document.querySelectorAll('.student-qr-cb');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            updateBulkQRButton();
+        }
+
+        window.updateBulkQRButton = function() {
+            const anyChecked = document.querySelectorAll('.student-qr-cb:checked').length > 0;
+            const btn = document.getElementById('btnBulkQR');
+            if(anyChecked) {
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+            } else {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            }
+        }
+
+        window.openStudentModal = async function(id = null) {
+            // Optimistic Class loading if missing
+            if(state.classes.length === 0) {
+                const res = await apiGet('getClasses');
+                state.classes = res.success ? res.data : [];
+            }
+
+            let student = { name: '', class: '', gender: 'L', photo: '' };
+            let title = "Tambah Siswa Baru";
+            if(id) {
+                student = state.students.find(s => s.id === id) || student;
+                title = "Edit Data Siswa";
+            }
+
+            const classOptions = state.classes.map(c => `<option value="${c.name}" ${student.class === c.name ? 'selected' : ''}>${c.name}</option>`).join('');
+
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto max-h-[90vh]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">${title}</h3>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Nama Lengkap</label>
+                            <input type="text" id="form-student-name" value="${student.name}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Kelas</label>
+                                <select id="form-student-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium bg-white cursor-pointer">
+                                    ${classOptions || '<option value="">(Belum ada kelas)</option>'}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Jenis Kelamin</label>
+                                <select id="form-student-gender" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium bg-white cursor-pointer">
+                                    <option value="L" ${student.gender === 'L' ? 'selected' : ''}>Laki-laki (L)</option>
+                                    <option value="P" ${student.gender === 'P' ? 'selected' : ''}>Perempuan (P)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Link Foto Profil (Opsional)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="form-student-photo" value="${student.photo || ''}" placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                                <a href="https://phototourl.com/id" target="_blank" class="shrink-0 bg-blue-50 text-blue-600 px-3 py-3 rounded-xl text-xs font-bold flex items-center gap-1 hover:bg-blue-100 transition-colors border border-blue-100" title="Ubah Gambar ke Link">
+                                    <i data-lucide="image-plus" class="w-4 h-4"></i> Upload
+                                </a>
+                            </div>
+                            <p class="text-[9px] text-slate-400 mt-1">Jika kosong, avatar otomatis menyesuaikan Jenis Kelamin.</p>
+                        </div>
+                    </div>
+                    <button onclick="saveStudent('${id || ''}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-6 text-sm transition-all">Simpan Data Siswa</button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        window.saveStudent = async function(id) {
+            const name = document.getElementById('form-student-name').value.trim();
+            const cls = document.getElementById('form-student-class').value;
+            const gender = document.getElementById('form-student-gender').value;
+            const photo = document.getElementById('form-student-photo').value.trim();
+
+            if(!name || !cls) return showToast('Nama dan Kelas wajib diisi', 'error');
+
+            showLoading(true);
+            const endpoint = id ? 'updateStudent' : 'addStudent';
+            const payload = { id, name, class: cls, gender, photo, adminName: state.currentUser.name };
+            
+            const res = await apiPost(endpoint, payload);
+            showLoading(false);
+
+            if(res.success) {
+                showToast(id ? 'Data siswa diperbarui!' : 'Siswa berhasil ditambahkan!', 'success');
+                closeModal();
+                loadStudentsAdmin();
+            } else {
+                showToast(res.message, 'error');
+            }
+        }
+
+        window.deleteStudent = async function(id) {
+            if(!confirm("Yakin ingin menghapus siswa ini permanen?")) return;
+            showLoading(true);
+            const res = await apiPost('deleteStudent', { id });
+            showLoading(false);
+            if(res.success) {
+                showToast('Data siswa berhasil dihapus!', 'success');
+                loadStudentsAdmin(); 
+            } else {
+                showToast('Gagal menghapus siswa', 'error');
+            }
+        }
+
+        /* STREAMING_CHUNK: Master Data Admin */
+        async function loadMasterData(activeTab = 'materi') {
+            const content = document.getElementById('admin-content');
+            
+            const tabs = [
+                { id: 'materi', label: 'Daftar Materi', icon: 'book' },
+                { id: 'kelas', label: 'Data Kelas', icon: 'layout' },
+                { id: 'akun', label: 'Akun Guru', icon: 'users' }
+            ];
+
+            const tabsHtml = tabs.map(t => `
+                <button onclick="loadMasterData('${t.id}')" class="px-4 py-2 text-sm font-bold rounded-xl transition-colors flex items-center gap-2 ${activeTab === t.id ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 bg-white border border-slate-200 hover:bg-slate-50'}">
+                    <i data-lucide="${t.icon}" class="w-4 h-4"></i> <span class="hidden md:inline">${t.label}</span>
+                </button>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="max-w-5xl mx-auto w-full">
+                    <div class="mb-6">
+                        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Master Data</h1>
+                        <p class="text-slate-500 text-sm mt-1">Konfigurasi pusat untuk aplikasi.</p>
+                    </div>
+                    <div class="flex gap-2 mb-6 overflow-x-auto hide-scroll pb-2">
+                        ${tabsHtml}
+                    </div>
+                    <div id="master-inner-content">
+                        <div class="flex justify-center py-8"><div class="loader w-8 h-8 border-4 border-emerald-100 border-t-emerald-500 rounded-full"></div></div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+
+            // Fetch data based on active tab
+            const innerDiv = document.getElementById('master-inner-content');
+            if(activeTab === 'materi') {
+                const res = await apiGet('getMaterials');
+                const settingsRes = await apiGet('getSettings');
+                state.materials = res.success ? res.data : [];
+                if(settingsRes.success && settingsRes.data.GLOBAL_PDF_URL) {
+                    state.globalPdfUrl = settingsRes.data.GLOBAL_PDF_URL;
+                }
+                innerDiv.innerHTML = renderMasterMateriHtml();
+            } else if (activeTab === 'kelas') {
+                const res = await apiGet('getClasses');
+                state.classes = res.success ? res.data : [];
+                innerDiv.innerHTML = renderMasterKelasHtml();
+            } else if (activeTab === 'akun') {
+                if(state.classes.length === 0) {
+                    const resClasses = await apiGet('getClasses');
+                    state.classes = resClasses.success ? resClasses.data : [];
+                }
+                const resTeachers = await apiGet('getTeachers');
+                state.teachers = resTeachers.success ? resTeachers.data : [];
+                innerDiv.innerHTML = renderMasterGuruHtml();
+            }
+            lucide.createIcons();
+        }
+
+        /* STREAMING_CHUNK: Kelola Materi */
+        function renderMasterMateriHtml() {
+            return `
+            <div class="bg-white rounded-3xl shadow-[0_4px_24px_rgb(0,0,0,0.02)] border border-slate-100 animate-slide-up flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Kelola Materi Hafalan</h3>
+                        <p class="text-xs text-slate-500 mt-1">Total: ${state.materials.length} Materi</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openPdfConfigModal()" class="bg-blue-50 text-blue-600 border border-blue-100 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-blue-100 transition-colors shadow-sm" title="Kelola Link PDF Materi Global">
+                            <i data-lucide="link" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="openImportModal()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-600/20">
+                            <i data-lucide="upload-cloud" class="w-4 h-4"></i> <span class="hidden md:inline">Import CSV</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100">
+                            <tr><th class="px-6 py-4">Kategori</th><th class="px-6 py-4">Nama Materi</th><th class="px-6 py-4 text-right">Aksi</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 text-slate-700">
+                            ${state.materials.map((m) => `
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="px-6 py-3 text-xs font-bold text-emerald-600">${m.category}</td>
+                                    <td class="px-6 py-3 font-semibold text-slate-800">${m.name}</td>
+                                    <td class="px-6 py-3 text-right">
+                                        <div class="flex justify-end gap-1.5">
+                                            <button onclick="openEditMaterial('${m.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors" title="Edit Materi"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                            <button onclick="deleteMaterial('${m.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors" title="Hapus Materi"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            ${state.materials.length === 0 ? `<tr><td colspan="3" class="text-center py-8 text-slate-500 text-sm">Belum ada materi. Silakan import.</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        window.openPdfConfigModal = function() {
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Set Link PDF Materi</h3>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">URL Google Drive / PDF Global</label>
+                            <input type="text" id="form-pdf-url" value="${state.globalPdfUrl || GLOBAL_PDF_URL}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium" placeholder="https://...">
+                            <p class="text-[9px] text-slate-400 mt-1.5">Link ini akan digunakan pada tombol 📖 Baca Materi Lengkap di halaman publik siswa.</p>
+                        </div>
+                    </div>
+                    <button onclick="savePdfUrl()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-6 text-sm transition-all">Simpan URL</button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        window.savePdfUrl = async function() {
+            const url = document.getElementById('form-pdf-url').value.trim();
+            showLoading(true);
+            const res = await apiPost('saveSettings', { key: 'GLOBAL_PDF_URL', value: url });
+            showLoading(false);
+            if(res.success) {
+                state.globalPdfUrl = url;
+                showToast('Link PDF berhasil diperbarui!', 'success');
+                closeModal();
+            }
+        }
+
+        window.deleteMaterial = async function(id) {
+            if(!confirm("Hapus materi ini?")) return;
+            showLoading(true);
+            await apiPost('deleteMaterial', { id });
+            showLoading(false);
+            showToast('Materi dihapus!', 'success');
+            loadMasterData('materi');
+        }
+
+        window.openEditMaterial = function(id) {
+            const mat = state.materials.find(m => m.id === id);
+            if(!mat) return;
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto max-h-[90vh]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Edit Materi</h3>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="overflow-y-auto hide-scroll space-y-4 pb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Nama Materi</label>
+                            <input type="text" id="edit-name" value="${mat.name}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Teks Arab (Gunakan '-' untuk pisah ayat)</label>
+                            <textarea id="edit-arabic" class="w-full h-20 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-['Amiri'] text-right" dir="rtl">${mat.arabic || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Latin</label>
+                            <textarea id="edit-latin" class="w-full h-16 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm">${mat.latin || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Terjemahan</label>
+                            <textarea id="edit-arti" class="w-full h-16 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm">${mat.translation || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Deskripsi Tambahan</label>
+                            <textarea id="edit-desc" class="w-full h-12 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm">${mat.description || ''}</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Link Gambar / Opsional</label>
+                            <input type="text" id="edit-image" value="${mat.image || ''}" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                        </div>
+                    </div>
+                    <button onclick="saveEditMaterial('${id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 text-sm transition-all">Simpan Perubahan</button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        window.saveEditMaterial = async function(id) {
+            const name = document.getElementById('edit-name').value.trim();
+            const arabic = document.getElementById('edit-arabic').value.trim();
+            const latin = document.getElementById('edit-latin').value.trim();
+            const arti = document.getElementById('edit-arti').value.trim();
+            const image = document.getElementById('edit-image').value.trim();
+            const desc = document.getElementById('edit-desc').value.trim();
+
+            if(!name) return showToast('Nama wajib diisi', 'error');
+
+            showLoading(true);
+            await apiPost('updateMaterial', { id, name, arabic, latin, arti, image, desc });
+            showLoading(false);
+            showToast('Materi diperbarui', 'success');
+            closeModal();
+            loadMasterData('materi');
+        }
+
+        window.openImportModal = function() {
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-lg p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Import Materi (CSV)</h3>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-xl mb-4">
+                        <p class="text-[10px] font-bold text-blue-800 uppercase mb-1">Format (Pisahkan dengan koma):</p>
+                        <code class="block text-[11px] text-slate-600 font-mono">Nama Materi, "Arab", Latin, Terjemahan, URL_Gambar(opsional)</code>
+                    </div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">Pilih Kategori untuk data yang di-import:</label>
+                    <select id="import-category" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-emerald-500 mb-4 cursor-pointer">
+                        <option value="DOA HARIAN">DOA HARIAN</option>
+                        <option value="SURAT PENDEK">SURAT PENDEK</option>
+                        <option value="AYAT PILIHAN">AYAT PILIHAN</option>
+                        <option value="BACAAN WUDHU">BACAAN WUDHU</option>
+                        <option value="SHOLAT">SHOLAT</option>
+                    </select>
+                    <textarea id="import-csv-data" class="w-full h-32 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 font-mono resize-none mb-4" placeholder='Contoh:\\nDoa Makan, "اللَّهُمَّ بَارِكْ لَنَا", Allahumma barik lana, Ya Allah berkahilah kami'></textarea>
+                    <button onclick="previewImport()" class="w-full bg-slate-800 text-white px-6 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-700 transition-colors shadow-md">
+                        <i data-lucide="eye" class="w-4 h-4"></i> Preview Data
+                    </button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        let pendingImportData = [];
+        window.previewImport = function() {
+            const category = document.getElementById('import-category').value;
+            const csvText = document.getElementById('import-csv-data').value.trim();
+            if(!csvText) return showToast('Data CSV masih kosong!', 'error');
+
+            const lines = csvText.split('\n');
+            pendingImportData = [];
+
+            lines.forEach((line) => {
+                if(!line.trim()) return;
+                const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                if(matches && matches.length > 0) {
+                    const parsed = matches.map(m => m.replace(/^"|"$/g, '').trim());
+                    pendingImportData.push({
+                        category: category,
+                        name: parsed[0] || 'Tanpa Nama',
+                        arabic: parsed[1] || '',
+                        latin: parsed[2] || '',
+                        arti: parsed[3] || '',
+                        image: parsed[4] || ''
+                    });
+                }
+            });
+
+            if(pendingImportData.length === 0) return showToast('Format tidak sesuai', 'error');
+
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-2xl p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto max-h-[90vh]">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Preview Import</h3>
+                            <p class="text-xs text-emerald-600 font-bold">${pendingImportData.length} baris terbaca</p>
+                        </div>
+                        <button onclick="openImportModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="overflow-auto max-h-64 border border-slate-100 rounded-xl mb-4 hide-scroll">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <thead class="bg-slate-50 text-slate-500 font-bold sticky top-0">
+                                <tr><th class="p-3">Nama</th><th class="p-3 text-right">Arab</th><th class="p-3">Latin</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 text-slate-700">
+                                ${pendingImportData.map(d => `<tr><td class="p-3 font-semibold">${d.name}</td><td class="p-3 text-right font-arabic text-sm" dir="rtl">${d.arabic ? '✓ Ada' : '-'}</td><td class="p-3 truncate max-w-[100px]">${d.latin}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button onclick="processImport()" class="w-full bg-emerald-600 text-white px-6 py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 shadow-md">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i> Simpan ke Database
+                    </button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+        window.processImport = async function() {
+            showLoading(true);
+            const res = await apiPost('importMaterials', { materials: pendingImportData });
+            showLoading(false);
+            if(res.success) {
+                showToast(`Berhasil menambahkan ${pendingImportData.length} materi!`, 'success');
+                pendingImportData = [];
+                closeModal();
+                loadMasterData('materi'); 
+            }
+        }
+
+        /* STREAMING_CHUNK: Kelola Kelas */
+        function renderMasterKelasHtml() {
+            return `
+            <div class="bg-white rounded-3xl shadow-[0_4px_24px_rgb(0,0,0,0.02)] border border-slate-100 animate-slide-up flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Kelola Data Kelas</h3>
+                        <p class="text-xs text-slate-500 mt-1">Total: ${state.classes.length} Kelas</p>
+                    </div>
+                    <button onclick="openClassModal()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-md">
+                        <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden md:inline">Tambah Kelas</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100">
+                            <tr><th class="px-6 py-4">ID Kelas</th><th class="px-6 py-4">Nama Kelas</th><th class="px-6 py-4 text-right">Aksi</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 text-slate-700">
+                            ${state.classes.map((c) => `
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="px-6 py-3 text-xs font-mono text-slate-500">${c.id}</td>
+                                    <td class="px-6 py-3 font-semibold text-slate-800">${c.name}</td>
+                                    <td class="px-6 py-3 text-right">
+                                        <div class="flex justify-end gap-1.5">
+                                            <button onclick="deleteClass('${c.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            ${state.classes.length === 0 ? `<tr><td colspan="3" class="text-center py-8 text-slate-500 text-sm">Belum ada kelas.</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        window.openClassModal = function() {
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">Tambah Kelas Baru</h3>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Nama Kelas</label>
+                            <input type="text" id="form-class-name" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium" placeholder="Contoh: Kelas Ali bin Abi Thalib">
+                        </div>
+                    </div>
+                    <button onclick="saveClass()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-6 text-sm transition-all">Simpan</button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        window.saveClass = async function() {
+            const name = document.getElementById('form-class-name').value.trim();
+            if(!name) return showToast('Nama kelas tidak boleh kosong', 'error');
+
+            showLoading(true);
+            await apiPost('addClass', { name });
+            showLoading(false);
+            showToast('Kelas ditambahkan', 'success');
+            closeModal();
+            loadMasterData('kelas');
+        }
+
+        window.deleteClass = async function(id) {
+            if(!confirm("Yakin ingin menghapus kelas ini?")) return;
+            showLoading(true);
+            await apiPost('deleteClass', { id });
+            showLoading(false);
+            showToast('Kelas dihapus', 'success');
+            loadMasterData('kelas');
+        }
+
+        /* STREAMING_CHUNK: Kelola Akun Guru */
+        function renderMasterGuruHtml() {
+            return `
+            <div class="bg-white rounded-3xl shadow-[0_4px_24px_rgb(0,0,0,0.02)] border border-slate-100 animate-slide-up flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg">Kelola Akun Guru (Ustadz/ah)</h3>
+                        <p class="text-xs text-slate-500 mt-1">Akun Admin dikelola secara terpisah oleh sistem.</p>
+                    </div>
+                    <button onclick="openTeacherModal()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-md">
+                        <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden md:inline">Tambah Guru</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100">
+                            <tr><th class="px-6 py-4">Nama Lengkap</th><th class="px-6 py-4">Username & Akses Kelas</th><th class="px-6 py-4 text-right">Aksi</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 text-slate-700">
+                            ${state.teachers.map((t) => `
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <td class="px-6 py-3 font-semibold text-slate-800 flex items-center gap-3">
+                                        <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">${t.name.charAt(0)}</div>
+                                        ${t.name}
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <p class="text-xs font-mono font-bold text-slate-700 mb-0.5">@${t.username}</p>
+                                        <p class="text-[10px] text-emerald-600 font-bold max-w-[200px] truncate" title="${t.classes}">${t.classes}</p>
+                                    </td>
+                                    <td class="px-6 py-3 text-right">
+                                        <div class="flex justify-end gap-1.5">
+                                            <button onclick="openTeacherModal('${t.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                            <button onclick="deleteTeacher('${t.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                            ${state.teachers.length === 0 ? `<tr><td colspan="3" class="text-center py-8 text-slate-500 text-sm">Belum ada akun guru.</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        window.openTeacherModal = function(id = null) {
+            let t = { name: '', username: '', password: '', classes: '' };
+            let title = 'Ust. ';
+            let plainName = '';
+
+            if(id) {
+                t = state.teachers.find(x => x.id === id);
+                if(t.name.startsWith('Ust. ')) { title = 'Ust. '; plainName = t.name.replace('Ust. ', ''); }
+                else if(t.name.startsWith('Usth. ')) { title = 'Usth. '; plainName = t.name.replace('Usth. ', ''); }
+                else { plainName = t.name; }
+            }
+
+            const activeClasses = t.classes ? t.classes.split(',') : [];
+
+            const classCheckboxes = state.classes.map(c => `
+                <label class="flex items-center gap-2 cursor-pointer p-2 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors">
+                    <input type="checkbox" name="teacher_classes" value="${c.name}" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" ${activeClasses.includes(c.name) ? 'checked' : ''}>
+                    <span class="text-xs font-bold text-slate-700">${c.name}</span>
+                </label>
+            `).join('');
+
+            const modalHtml = `
+                <div class="bg-white rounded-[2rem] w-full max-w-md p-6 shadow-2xl relative animate-slide-up flex flex-col mx-auto my-auto max-h-[90vh]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-800">${id ? 'Edit Akun Guru' : 'Tambah Akun Guru'}</h3>
+                        <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="overflow-y-auto hide-scroll space-y-4 pb-2">
+                        <div class="grid grid-cols-[100px_1fr] gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Gelar</label>
+                                <select id="form-teacher-title" class="w-full px-3 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium bg-white cursor-pointer">
+                                    <option value="Ust. " ${title === 'Ust. ' ? 'selected' : ''}>Ust. (L)</option>
+                                    <option value="Usth. " ${title === 'Usth. ' ? 'selected' : ''}>Usth. (P)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Nama Panggilan</label>
+                                <input type="text" id="form-teacher-name" value="${plainName}" placeholder="Cth: Ahmad" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Username Login</label>
+                                <input type="text" id="form-teacher-user" value="${t.username}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
+                                <input type="text" id="form-teacher-pass" value="${t.password}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none text-sm font-medium">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-2">Pilih Akses Kelas (Boleh lebih dari 1)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                ${classCheckboxes || `<p class="text-xs text-slate-400 col-span-2">Belum ada data kelas di master data.</p>`}
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="saveTeacher('${id || ''}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-6 text-sm transition-all">Simpan Akun</button>
+                </div>
+            `;
+            openModal(modalHtml);
+        }
+
+        window.saveTeacher = async function(id) {
+            const title = document.getElementById('form-teacher-title').value;
+            const plainName = document.getElementById('form-teacher-name').value.trim();
+            const username = document.getElementById('form-teacher-user').value.trim().toLowerCase();
+            const password = document.getElementById('form-teacher-pass').value.trim();
+            
+            const checkboxes = document.querySelectorAll('input[name="teacher_classes"]:checked');
+            const classesArray = Array.from(checkboxes).map(cb => cb.value);
+
+            if(!plainName || !username || !password) return showToast('Harap lengkapi semua form input.', 'error');
+            if(classesArray.length === 0) return showToast('Pilih minimal 1 kelas akses', 'error');
+
+            const fullName = title + plainName;
+            const classesStr = classesArray.join(',');
+
+            showLoading(true);
+            const endpoint = id ? 'updateTeacher' : 'addTeacher';
+            const res = await apiPost(endpoint, { id, name: fullName, username, password, classes: classesStr });
+            showLoading(false);
+
+            if(res.success) {
+                showToast(id ? 'Akun guru diperbarui!' : 'Akun guru ditambahkan!', 'success');
+                closeModal();
+                loadMasterData('akun');
+            } else {
+                showToast(res.message, 'error');
+            }
+        }
+
+        window.deleteTeacher = async function(id) {
+            if(!confirm("Yakin ingin menghapus guru ini?")) return;
+            showLoading(true);
+            await apiPost('deleteTeacher', { id });
+            showLoading(false);
+            showToast('Akun guru dihapus!', 'success');
+            loadMasterData('akun');
+        }
+
+        /* STREAMING_CHUNK: Setor Hafalan Guru */
+        async function loadSetorHafalan() {
+            const content = document.getElementById('admin-content');
+            content.innerHTML = `<div class="h-full flex items-center justify-center"><div class="loader w-10 h-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full"></div></div>`;
+            
+            const classesStr = state.currentUser.classes?.join(',') || '';
+            const res = await apiGet('getStudents', { teacherClass: classesStr });
+            const students = res.data || [];
+
+            content.innerHTML = `
+                <div class="animate-slide-up max-w-lg mx-auto w-full pb-10">
+                    <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight mb-1">Setor Hafalan</h1>
+                    <p class="text-slate-500 text-sm mb-6 font-medium">Pilih santri untuk memantau dan menilai.</p>
+                    
+                    <div class="relative mb-6 group">
+                        <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" placeholder="Cari nama santri..." class="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 font-medium transition-all" onkeyup="searchStudent(this.value)">
+                    </div>
+
+                    <div class="space-y-3" id="student-list">
+                        ${students.map((s, idx) => {
+                            let displayAvatar = s.photo ? s.photo : (s.gender === 'P' ? AVATAR_P : AVATAR_L);
+                            return `
+                            <div class="student-row bg-white p-4 rounded-2xl border border-slate-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex items-center justify-between cursor-pointer hover:border-emerald-300 hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-300 animate-slide-up" style="animation-delay: ${Math.min(idx * 30, 300)}ms; opacity: 0; animation-fill-mode: forwards;" onclick="openPenilaianSiswa('${s.token}')">
+                                <div class="flex items-center gap-4">
+                                    <img src="${displayAvatar}" class="w-10 h-10 rounded-full object-cover bg-slate-100 border border-slate-200">
+                                    <div>
+                                        <p class="student-name font-bold text-slate-800 text-sm md:text-base">${s.name}</p>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${s.class}</p>
+                                    </div>
+                                </div>
+                                <div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors"></i>
+                                </div>
+                            </div>
+                        `}).join('')}
+                        ${students.length === 0 ? `<div class="text-center py-8 text-slate-500 text-sm">Tidak ada santri di kelas Anda.</div>` : ''}
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        window.searchStudent = function(val) {
+            const rows = document.querySelectorAll('.student-row');
+            const term = val.toLowerCase();
+            rows.forEach(row => {
+                const name = row.querySelector('.student-name').innerText.toLowerCase();
+                if(name.includes(term)) row.style.display = 'flex';
+                else row.style.display = 'none';
+            });
+        }
+
+        async function openPenilaianSiswa(token) {
+            showLoading(true);
+            const response = await apiGet('getStudentProgress', { token });
+            showLoading(false);
+            if(!response.success) return showToast('Gagal memuat data siswa', 'error');
+
+            const data = response.data;
+            const grouped = data.materials.reduce((acc, curr) => {
+                if(!acc[curr.category]) acc[curr.category] = [];
+                acc[curr.category].push(curr);
+                return acc;
+            }, {});
+
+            let matHTML = '';
+            for (const [category, items] of Object.entries(grouped)) {
+                matHTML += `
+                <div class="mb-5 category-group">
+                    <div class="flex items-center gap-2 mb-2 px-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                        <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">${category}</h3>
+                    </div>
+                    <div class="bg-white border border-slate-100 rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] overflow-hidden divide-y divide-slate-50">
+                `;
+                
+                items.forEach((m) => {
+                    matHTML += `
+                        <div class="modal-material-item flex justify-between items-center p-3 gap-2" data-status="${m.status}">
+                            <div class="text-xs font-semibold text-slate-700 leading-tight flex-grow line-clamp-1" title="${m.name}">${m.name}</div>
+                            <div class="flex bg-slate-100 p-0.5 rounded-lg shrink-0 border border-slate-200/60 shadow-inner">
+                                <button onclick="updateStatus('${data.student.studentId}', '${m.id}', 'BELUM', this)" class="px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 ${m.status === 'BELUM' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}">BLM</button>
+                                <button onclick="updateStatus('${data.student.studentId}', '${m.id}', 'PROSES', this)" class="px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 ${m.status === 'PROSES' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}">PROS</button>
+                                <button onclick="updateStatus('${data.student.studentId}', '${m.id}', 'HAFAL', this)" class="px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 ${m.status === 'HAFAL' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}">HFL</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                matHTML += `</div></div>`;
+            }
+            
+            const modalHtml = `
+                <div class="bg-slate-50 w-full h-[100dvh] md:h-auto md:max-h-[85vh] md:max-w-md md:rounded-[2.5rem] flex flex-col absolute inset-0 md:relative overflow-hidden animate-slide-up shadow-2xl">
+                    <div class="bg-white px-4 pt-4 pb-2 border-b border-slate-100 flex flex-col z-10 shrink-0 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-50 rounded-full"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm leading-tight">${data.student.name}</h3>
+                                <p class="text-[9px] text-emerald-600 font-bold uppercase">${data.student.class}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto hide-scroll pb-1">
+                            <button onclick="filterModalProgress('SEMUA')" class="modal-filter-btn active bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="SEMUA">Semua</button>
+                            <button onclick="filterModalProgress('HAFAL')" class="modal-filter-btn bg-slate-100 text-slate-500 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="HAFAL">Hafal (<span id="count-hfl">${data.stats.hafal}</span>)</button>
+                            <button onclick="filterModalProgress('PROSES')" class="modal-filter-btn bg-slate-100 text-slate-500 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="PROSES">Proses (<span id="count-prs">${data.stats.proses}</span>)</button>
+                            <button onclick="filterModalProgress('BELUM')" class="modal-filter-btn bg-slate-100 text-slate-500 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all" data-status="BELUM">Belum (<span id="count-blm">${data.stats.belum}</span>)</button>
+                        </div>
+                    </div>
+                    <div class="flex-grow overflow-y-auto p-4 relative pb-10 hide-scroll">
+                        ${matHTML}
+                    </div>
+                </div>
+            `;
+            openModal(modalHtml);
+
+            window.filterModalProgress = function(status) {
+                const items = document.querySelectorAll('.modal-material-item');
+                const buttons = document.querySelectorAll('.modal-filter-btn');
+                
+                buttons.forEach(btn => {
+                    if(btn.dataset.status === status) btn.className = `modal-filter-btn bg-slate-800 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all`;
+                    else btn.className = `modal-filter-btn bg-slate-100 text-slate-500 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all`;
+                });
+
+                items.forEach(item => {
+                    item.style.display = (status === 'SEMUA' || item.dataset.status === status) ? 'flex' : 'none';
+                });
+
+                document.querySelectorAll('.category-group').forEach(group => {
+                    const visibleItems = Array.from(group.querySelectorAll('.modal-material-item')).filter(i => i.style.display !== 'none');
+                    group.style.display = visibleItems.length === 0 ? 'none' : 'block';
+                });
+            }
+        }
+
+        window.updateStatus = function(studentId, materialId, newStatus, btnElement) {
+            const container = btnElement.parentElement;
+            const buttons = container.querySelectorAll('button');
+            
+            buttons.forEach(btn => btn.className = "px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 text-slate-400 hover:text-slate-600");
+
+            if(newStatus === 'BELUM') btnElement.className = "px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 bg-white text-rose-600 shadow-sm";
+            if(newStatus === 'PROSES') btnElement.className = "px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 bg-white text-amber-600 shadow-sm";
+            if(newStatus === 'HAFAL') btnElement.className = "px-2 py-1 text-[9px] font-bold rounded-md transition-all duration-300 bg-white text-emerald-600 shadow-sm";
+
+            const card = container.closest('.modal-material-item');
+            card.dataset.status = newStatus; 
+
+            updateModalCountsDynamically();
+
+            // Lakukan pembaruan di latar belakang (tanpa loading UI)
+            apiPost('updateProgress', { studentId, materialId, status: newStatus, teacher: state.currentUser.name });
+        }
+
+        function updateModalCountsDynamically() {
+            const items = document.querySelectorAll('.modal-material-item');
+            let hafal = 0, proses = 0, belum = 0;
+            items.forEach(item => {
+                if(item.dataset.status === 'HAFAL') hafal++;
+                if(item.dataset.status === 'PROSES') proses++;
+                if(item.dataset.status === 'BELUM') belum++;
+            });
+            
+            const spanProses = document.getElementById('count-prs');
+            const spanBelum = document.getElementById('count-blm');
+            const spanHafal = document.getElementById('count-hfl');
+            
+            if(spanProses) spanProses.innerText = proses;
+            if(spanBelum) spanBelum.innerText = belum;
+            if(spanHafal) spanHafal.innerText = hafal;
+        }
+
+        async function loadHistory() {
+            const content = document.getElementById('admin-content');
+            content.innerHTML = `<div class="h-full flex items-center justify-center"><div class="loader w-10 h-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full"></div></div>`;
+            
+            const classesStr = state.currentUser.classes?.join(',') || '';
+            const res = await apiGet('getHistory', { teacherClass: classesStr });
+            if(!res.success) return;
+
+            content.innerHTML = `
+                <div class="max-w-lg mx-auto w-full animate-slide-up">
+                    <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight mb-1">Riwayat Setoran</h1>
+                    <p class="text-slate-500 text-sm mb-6 font-medium">Log aktivitas setoran <strong class="text-slate-700">7 Hari Terakhir</strong>.</p>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                        <div class="space-y-4">
+                            ${res.data.length === 0 ? `<p class="text-slate-400 text-sm italic text-center py-4">Belum ada riwayat setoran di 7 hari terakhir.</p>` : ''}
+                            ${res.data.map(act => {
+                                let iconColor = "bg-slate-100 text-slate-500";
+                                let icon = "mic";
+                                if(act.status === 'HAFAL') { iconColor = "bg-emerald-100 text-emerald-600"; icon = "check"; }
+                                else if(act.status === 'PROSES') { iconColor = "bg-amber-100 text-amber-600"; icon = "clock"; }
+                                else { iconColor = "bg-rose-100 text-rose-600"; icon = "x"; }
+                                
+                                return `
+                                <div class="flex gap-3 border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                                    <div class="w-8 h-8 rounded-full ${iconColor} flex items-center justify-center shrink-0"><i data-lucide="${icon}" class="w-4 h-4"></i></div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">${act.desc} <span class="text-slate-500 font-normal">(${act.status})</span></p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">${act.time} • Oleh: ${act.by}</p>
+                                    </div>
+                                </div>
+                                `
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>`;
+            lucide.createIcons();
+        }
+
+        /* STREAMING_CHUNK: Bulk QR Print and Render */
+        window.downloadBulkQR = async function() {
+            const checkboxes = document.querySelectorAll('.student-qr-cb:checked');
+            const selectedTokens = Array.from(checkboxes).map(cb => cb.value);
+            if(selectedTokens.length === 0) return;
+
+            const studentsToDownload = state.students.filter(s => selectedTokens.includes(s.token));
+            
+            showLoading(true);
+            
+            try {
+                const zip = new JSZip();
+                const baseUrl = window.location.origin + window.location.pathname;
+                
+                if (document.fonts) {
+                    await document.fonts.ready;
+                }
+
+                const logoImg = await new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous"; 
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null); 
+                    img.src = TPQ_LOGO;
+                });
+
+                // Render off-screen
+                const tempDiv = document.createElement('div');
+                tempDiv.style.position = 'fixed';
+                tempDiv.style.left = '-9999px';
+                document.body.appendChild(tempDiv);
+
+                for (let i = 0; i < studentsToDownload.length; i++) {
+                    const s = studentsToDownload[i];
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1050;
+                    canvas.height = 1485;
+                    const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.setLineDash([20, 15]);
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height - 4);
+                    ctx.lineTo(canvas.width, canvas.height - 4);
+                    ctx.lineWidth = 8;
+                    ctx.strokeStyle = '#6ee7b7'; 
+                    ctx.stroke();
+                    ctx.setLineDash([]); 
+
+                    if (logoImg) {
+                        const logoSize = 130;
+                        ctx.drawImage(logoImg, (canvas.width - logoSize) / 2, 140, logoSize, logoSize);
+                    }
+
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#064e3b'; 
+                    ctx.font = '900 48px Poppins, sans-serif';
+                    ctx.fillText("AS-SA'ADAH", canvas.width / 2, 350);
+
+                    ctx.fillStyle = '#059669'; 
+                    ctx.font = 'bold 24px Poppins, sans-serif';
+                    if (ctx.letterSpacing !== undefined) ctx.letterSpacing = '5px'; 
+                    ctx.fillText("KARTU HAFALAN DIGITAL", canvas.width / 2, 410);
+                    if (ctx.letterSpacing !== undefined) ctx.letterSpacing = '0px';
+
+                    const boxSize = 680;
+                    const boxX = (canvas.width - boxSize) / 2;
+                    const boxY = 480;
+
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
+                    ctx.shadowBlur = 40;
+                    ctx.shadowOffsetY = 15;
+                    ctx.fillStyle = '#ffffff';
+                    
+                    const radius = 50;
+                    ctx.beginPath();
+                    ctx.moveTo(boxX + radius, boxY);
+                    ctx.lineTo(boxX + boxSize - radius, boxY);
+                    ctx.quadraticCurveTo(boxX + boxSize, boxY, boxX + boxSize, boxY + radius);
+                    ctx.lineTo(boxX + boxSize, boxY + boxSize - radius);
+                    ctx.quadraticCurveTo(boxX + boxSize, boxY + boxSize, boxX + boxSize - radius, boxY + boxSize);
+                    ctx.lineTo(boxX + radius, boxY + boxSize);
+                    ctx.quadraticCurveTo(boxX, boxY + boxSize, boxX, boxY + boxSize - radius);
+                    ctx.lineTo(boxX, boxY + radius);
+                    ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
+                    ctx.fill();
+
+                    ctx.shadowColor = 'transparent'; 
+
+                    const qrContainer = document.createElement('div');
+                    tempDiv.appendChild(qrContainer);
+                    
+                    const qrUrl = `${baseUrl}?student=${s.token}`;
+                    
+                    await new Promise(resolve => {
+                        new QRCode(qrContainer, {
+                            text: qrUrl,
+                            width: 580,
+                            height: 580,
+                            colorDark : "#0f172a", 
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.H
+                        });
+                        setTimeout(resolve, 100); 
+                    });
+
+                    const qrCanvas = qrContainer.querySelector('canvas');
+                    if (qrCanvas) {
+                        ctx.drawImage(qrCanvas, boxX + 50, boxY + 50, 580, 580);
+                    }
+
+                    ctx.fillStyle = '#1e293b'; 
+                    ctx.font = 'bold 56px Poppins, sans-serif';
+                    ctx.fillText(s.name, canvas.width / 2, 1280);
+
+                    ctx.fillStyle = '#64748b'; 
+                    ctx.font = '500 28px Poppins, sans-serif';
+                    ctx.fillText("Scan QR untuk melihat progress", canvas.width / 2, 1340);
+
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const base64Data = dataUrl.replace(/^data:image\/(png|jpg);base64,/, "");
+                    
+                    const safeName = s.name.replace(/[^a-z0-9]/gi, '_');
+                    const safeClass = s.class.replace(/[^a-z0-9]/gi, '_');
+                    
+                    zip.file(`QR_${safeName}_${safeClass}.png`, base64Data, {base64: true});
+                }
+
+                document.body.removeChild(tempDiv);
+
+                const content = await zip.generateAsync({type: "blob"});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `QR_Santri_Assaadah_${Date.now()}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast(`Berhasil mengunduh ${studentsToDownload.length} QR Code HD!`, 'success');
+                
+                const selectAllCb = document.getElementById('selectAllQR');
+                if(selectAllCb) selectAllCb.checked = false;
+                document.querySelectorAll('.student-qr-cb').forEach(cb => cb.checked = false);
+                updateBulkQRButton();
+
+            } catch (err) {
+                console.error(err);
+                showToast('Terjadi kesalahan saat membuat file ZIP.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        window.printSingleQR = function() {
+            document.body.classList.add('is-printing-single');
+            window.print();
+            setTimeout(() => document.body.classList.remove('is-printing-single'), 500);
+        }
+
+        function openQrModal(name, token, photoUrl) {
+            const baseUrl = window.location.origin + window.location.pathname;
+            const qrUrl = `${baseUrl}?student=${token}`;
+            
+            const modalHtml = `
+                <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full relative animate-slide-up text-center shadow-2xl mx-auto my-auto">
+                    <button onclick="closeModal()" class="absolute top-3 right-3 p-2 text-slate-400 hover:bg-slate-100 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    
+                    <div id="print-area" class="border-2 border-dashed border-emerald-200 rounded-2xl p-6 bg-emerald-50/30 mb-6 mt-4 relative">
+                        <img src="${TPQ_LOGO}" alt="Logo TPQ" class="w-8 h-8 mx-auto mb-2 opacity-90 object-contain">
+                        <h4 class="font-extrabold text-emerald-800 text-sm tracking-wider mb-1">AS-SA'ADAH</h4>
+                        <p class="text-[9px] font-bold text-emerald-600 uppercase mb-4 tracking-widest">Kartu Hafalan Digital</p>
+                        
+                        <div class="bg-white p-3 rounded-2xl shadow-md inline-block mb-3 border border-slate-100" id="qrcode-container"></div>
+                        
+                        <h2 class="font-bold text-slate-800 text-base leading-tight mt-1">${name}</h2>
+                        <p class="text-[9px] text-slate-500 mt-1.5 font-medium">Scan QR untuk melihat progress</p>
+                    </div>
+
+                    <button onclick="printSingleQR()" class="w-full bg-emerald-600 text-white py-3 rounded-2xl text-xs font-bold shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"><i data-lucide="printer" class="w-4 h-4"></i> Cetak Kartu QR Tunggal</button>
+                </div>
+            `;
+            openModal(modalHtml);
+            
+            setTimeout(() => {
+                new QRCode(document.getElementById("qrcode-container"), { text: qrUrl, width: 140, height: 140, colorDark : "#0f172a", colorLight : "#ffffff" });
+            }, 100);
+        }
+
+        function logout() { state.currentUser = null; renderLogin(); }
+
+        function goToHome() {
+            if (state.currentUser) renderAdminLayout('dashboard');
+            else renderLogin();
+        }
+
+        function initApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('student')) renderStudentProgress(urlParams.get('student'));
+            else renderLogin();
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
